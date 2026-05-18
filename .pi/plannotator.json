@@ -1,0 +1,19 @@
+{
+  "defaults": {
+    "model": { "provider": "opencode-go", "id": "deepseek-v4-pro" },
+    "thinking": "high",
+    "statusLabel": "pi-driven"
+  },
+  "phases": {
+    "planning": {
+      "thinking": "medium",
+      "activeTools": ["plannotator_submit_plan"],
+      "statusLabel": "planning",
+      "systemPrompt": "[PLANNING] Plan file: ${planFilePath}\nExplore the codebase, understand the task, and write a concrete plan using markdown checklists."
+    },
+    "executing": {
+      "thinking": "high",
+      "systemPrompt": "[EXECUTING]\nRemaining steps:\n${todoList}\nExecute each step methodically. Mark items done as you complete them."
+    }
+  }
+}
