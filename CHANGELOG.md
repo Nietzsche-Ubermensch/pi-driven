@@ -11,3 +11,5 @@ Commits: [Conventional Commits](https://www.conventionalcommits.org/)
 ### Added
 
 - Initialize pi-driven project with changelog automation
+- Enterprise-grade monorepo with full automation
+
