@@ -12,4 +12,5 @@ Commits: [Conventional Commits](https://www.conventionalcommits.org/)
 
 - Initialize pi-driven project with changelog automation
 - Enterprise-grade monorepo with full automation
+- Integrate plannotator and spences10 pi packages
 
