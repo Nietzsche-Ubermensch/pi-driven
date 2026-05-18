@@ -1,0 +1,19 @@
+{
+  "name": "pi-driven",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pi-driven project — AI-native development with changelog automation",
+  "scripts": {
+    "changelog": "git cliff -o CHANGELOG.md",
+    "changelog:preview": "git cliff --unreleased",
+    "changelog:dry": "git cliff --dry-run",
+    "release": "git cliff -o CHANGELOG.md && node scripts/bump-version.mjs",
+    "release:patch": "npm run release -- patch",
+    "release:minor": "npm run release -- minor",
+    "release:major": "npm run release -- major"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0"
+  }
+}

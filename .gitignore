@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+.pi/sessions/
+.pi/github-repos/
+.turbo/
+coverage/
