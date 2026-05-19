@@ -15,3 +15,7 @@ Commits: [Conventional Commits](https://www.conventionalcommits.org/)
 - Integrate plannotator and spences10 pi packages
 - Integrate rpiv pipeline packages (juicesharp)
 
+### Fixed
+
+- Resolve package conflicts, add coding-preferences config
+
