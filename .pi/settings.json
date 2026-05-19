@@ -6,6 +6,7 @@
     "npm:pi-mcp-adapter",
     "npm:pi-web-access",
     "npm:pi-lens",
+    "npm:@tintinweb/pi-subagents",
     "npm:@plannotator/pi-extension",
     "npm:@spences10/pi-git-ui",
     "npm:@spences10/pi-coding-preferences",

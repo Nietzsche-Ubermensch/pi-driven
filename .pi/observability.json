@@ -1,0 +1,18 @@
+{
+  "phoenix": {
+    "projectName": "pi-driven",
+    "collectorEndpoint": "http://localhost:6006",
+    "apiKey": "ak-fa83cbf7-a164-4454-9c6b-49fdcd477633-1qkXVcdBiSItZjMF2LG7AJtivWGM8jqe"
+  },
+  "arize": {
+    "spaceId": "U3BhY2U6NDM3ODg6QTZUdQ==",
+    "endpoint": "https://app.arize.com",
+    "apiKey": "ak-fa83cbf7-a164-4454-9c6b-49fdcd477633-1qkXVcdBiSItZjMF2LG7AJtivWGM8jqe"
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "outputs": ["console", "file"],
+    "filePath": "./logs/pi-driven.log"
+  }
+}
