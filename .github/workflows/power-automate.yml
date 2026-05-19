@@ -1,0 +1,92 @@
+name: Power Automate Integration
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "Packages to build (comma-separated)"
+        required: false
+        type: string
+
+jobs:
+  notify-power-automate:
+    name: Notify Power Automate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Detect changed paths
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            core: packages/core/**
+            api: packages/api/**
+            cli: packages/cli/**
+            pipeline: packages/pipeline/**
+            security: packages/security/**
+            services: services/**
+
+      - name: Build changed packages list
+        id: packages
+        run: |
+          PACKAGES=""
+          for pkg in core api cli pipeline security; do
+            if [ "${{ steps.changes.outputs[format('{0}', 'core')] }}" = "true" ]; then
+              PACKAGES="${PACKAGES}${pkg},"
+            fi
+          done
+          # Handle services
+          if [ "${{ steps.changes.outputs.services }}" = "true" ]; then
+            PACKAGES="${PACKAGES}device-manager,deploy-agent"
+          fi
+          PACKAGES="${PACKAGES%,}"
+          echo "changed=$PACKAGES" >> $GITHUB_OUTPUT
+          echo "Changed packages: $PACKAGES"
+
+      - name: Call Power Automate Webhook
+        if: steps.packages.outputs.changed != ''
+        run: |
+          curl -X POST "${{ secrets.PA_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "event": "push",
+              "repository": "${{ github.repository }}",
+              "branch": "${{ github.ref_name }}",
+              "commit": "${{ github.sha }}",
+              "changed_packages": "${{ steps.packages.outputs.changed }}",
+              "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }'
+
+  build:
+    name: Build Changed Packages
+    runs-on: ubuntu-latest
+    needs: notify-power-automate
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: "npm" }
+      - run: npm ci
+
+      - name: Build packages
+        run: |
+          for pkg in core api cli; do
+            if [ -f "packages/$pkg/tsconfig.json" ]; then
+              echo "Building $pkg..."
+              npx tsc -p "packages/$pkg/tsconfig.json" --skipLibCheck
+            fi
+          done
+
+      - name: Report status to Power Automate
+        if: always()
+        run: |
+          curl -X POST "${{ secrets.PA_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "event": "build_complete",
+              "repository": "${{ github.repository }}",
+              "status": "${{ job.status }}",
+              "workflow_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }'

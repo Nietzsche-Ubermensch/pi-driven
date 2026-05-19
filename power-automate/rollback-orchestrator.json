@@ -1,0 +1,69 @@
+{
+  "name": "pi-driven-rollback-orchestrator",
+  "description": "Triggered on deployment failure → checkout last good tag → redeploy → verify → notify",
+  "triggers": [
+    {
+      "type": "http",
+      "name": "Rollback Request",
+      "method": "POST",
+      "schema": {
+        "failed_run": "string",
+        "last_good_tag": "string"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "name": "Log Rollback Start",
+      "connector": "teams",
+      "operation": "post_message",
+      "inputs": {
+        "channel": "pi-driven-alerts",
+        "message": "🔄 Rollback initiated to @{triggerBody()?.['last_good_tag']}. Failed run: @{triggerBody()?.['failed_run']}"
+      }
+    },
+    {
+      "name": "Dispatch Rollback Workflow",
+      "connector": "github",
+      "operation": "workflow_dispatch",
+      "inputs": {
+        "owner": "Nietzsche-Ubermensch",
+        "repo": "pi-driven",
+        "workflow_id": "deploy.yml",
+        "ref": "@{triggerBody()?.['last_good_tag']}",
+        "inputs": {
+          "environment": "production",
+          "tag": "@{triggerBody()?.['last_good_tag']}"
+        }
+      }
+    },
+    {
+      "name": "Delay (wait for deployment)",
+      "action": "delay",
+      "inputs": {
+        "duration": "PT2M"
+      }
+    },
+    {
+      "name": "Verify Deployment Health",
+      "action": "http",
+      "inputs": {
+        "method": "GET",
+        "uri": "https://api.pi-driven.dev/health",
+        "retryPolicy": {
+          "count": 3,
+          "interval": "PT30S"
+        }
+      }
+    },
+    {
+      "name": "Notify Rollback Complete",
+      "connector": "teams",
+      "operation": "post_message",
+      "inputs": {
+        "channel": "pi-driven-alerts",
+        "message": "✅ Rollback to @{triggerBody()?.['last_good_tag']} complete. Health check: @{outputs('Verify_Deployment_Health')?.['statusCode']}"
+      }
+    }
+  ]
+}

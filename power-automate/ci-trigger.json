@@ -1,0 +1,61 @@
+{
+  "name": "pi-driven-ci-trigger",
+  "description": "GitHub push webhook → identify changed packages → dispatch targeted CI builds",
+  "triggers": [
+    {
+      "type": "http",
+      "name": "GitHub Webhook",
+      "method": "POST",
+      "schema": {
+        "event": "string",
+        "repository": "string",
+        "branch": "string",
+        "commit": "string",
+        "changed_packages": "string"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "name": "Parse Changed Packages",
+      "action": "compose",
+      "inputs": {
+        "packages": "@{triggerBody()?.['changed_packages']}"
+      },
+      "output": "packageList"
+    },
+    {
+      "name": "For Each Package — Dispatch GitHub Workflow",
+      "action": "apply_to_each",
+      "inputs": {
+        "source": "@{split(outputs('Parse_Changed_Packages'), ',')}"
+      },
+      "actions": [
+        {
+          "name": "GitHub Actions Dispatch",
+          "connector": "github",
+          "operation": "workflow_dispatch",
+          "inputs": {
+            "owner": "Nietzsche-Ubermensch",
+            "repo": "pi-driven",
+            "workflow_id": "build.yml",
+            "ref": "main",
+            "inputs": {
+              "packages": "@{item()}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Log to Teams",
+      "connector": "teams",
+      "operation": "post_message",
+      "condition": "@{greater(length(outputs('Parse_Changed_Packages')), 0)}",
+      "inputs": {
+        "channel": "pi-driven-builds",
+        "message": "Build triggered for: @{outputs('Parse_Changed_Packages')} — Commit @{triggerBody()?.['commit']}"
+      }
+    }
+  ]
+}

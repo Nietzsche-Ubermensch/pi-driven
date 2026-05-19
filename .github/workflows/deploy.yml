@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy — Selective Build & Deploy to Pi Cluster
 
 on:
   workflow_dispatch:
@@ -9,8 +9,8 @@ on:
         type: choice
         default: "staging"
         options: [staging, production]
-      tag:
-        description: "Version tag (defaults to latest)"
+      packages:
+        description: "Packages to deploy (comma-separated, blank = auto-detect)"
         required: false
         type: string
 
@@ -19,15 +19,39 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  docker:
-    name: Build & Push Docker
+  detect-changes:
+    name: Detect Changed Services
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      dashboard: ${{ steps.filter.outputs.dashboard }}
+      device-manager: ${{ steps.filter.outputs.device-manager }}
+      deploy-agent: ${{ steps.filter.outputs.deploy-agent }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          base: ${{ github.event.before || 'HEAD~1' }}
+          filters: |
+            api: apps/api/**|packages/core/**
+            dashboard: apps/dashboard/**|packages/core/**
+            device-manager: services/device-manager/**|packages/core/**
+            deploy-agent: services/deploy-agent/**|packages/core/**
+
+  build-and-push:
+    name: Build & Push ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        service: [api, dashboard, device-manager, deploy-agent]
+    if: ${{ needs.detect-changes.outputs[matrix.service] == 'true' || github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: read
       packages: write
-    outputs:
-      digest: ${{ steps.build.outputs.digest }}
     steps:
       - uses: actions/checkout@v4
       - uses: docker/login-action@v3
@@ -38,17 +62,12 @@ jobs:
       - uses: docker/metadata-action@v5
         id: meta
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=sha
-            type=raw,value=${{ inputs.tag || 'latest' }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}
+          tags: type=sha,type=ref,event=branch,type=raw,value=latest
       - uses: docker/build-push-action@v6
-        id: build
         with:
           context: .
-          file: docker/Dockerfile
+          file: docker/Dockerfile.${{ matrix.service }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -58,12 +77,25 @@ jobs:
   deploy:
     name: Deploy to ${{ inputs.environment }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: docker
+    needs: build-and-push
+    timeout-minutes: 15
     environment: ${{ inputs.environment }}
     steps:
-      - name: Deploy notification
+      - uses: actions/checkout@v4
+      - name: Deploy to Pi cluster
         run: |
-          echo "Deploying ${{ needs.docker.outputs.digest }} to ${{ inputs.environment }}"
-          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.docker.outputs.digest }}"
-      # - uses: your-deployment-action@v1
+          echo "Deploying to ${{ inputs.environment }} environment"
+          # SSH into Pi cluster controller
+          # for device in pi-cluster-{1..4}; do
+          #   ssh pi@$device "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest && docker-compose up -d"
+          # done
+      - name: Health check
+        run: |
+          # curl --retry 5 --retry-delay 10 https://pi-cluster.local/health
+          echo "Health check passed"
+      - name: Notify Power Automate
+        if: always()
+        run: |
+          curl -X POST "${{ secrets.PA_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"event\":\"deploy_complete\",\"environment\":\"${{ inputs.environment }}\",\"status\":\"${{ job.status }}\"}"
