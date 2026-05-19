@@ -17,6 +17,7 @@ Commits: [Conventional Commits](https://www.conventionalcommits.org/)
 - Enterprise deployment, monitoring, and advisor escalation
 - Enterprise pi extension with mode-aware security
 - Enterprise skills and prompt templates
+- Enterprise CLI with 6 commands + skills + prompts
 
 ### Fixed
 
