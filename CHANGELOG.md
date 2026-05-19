@@ -14,6 +14,7 @@ Commits: [Conventional Commits](https://www.conventionalcommits.org/)
 - Enterprise-grade monorepo with full automation
 - Integrate plannotator and spences10 pi packages
 - Integrate rpiv pipeline packages (juicesharp)
+- Enterprise deployment, monitoring, and advisor escalation
 
 ### Fixed
 
