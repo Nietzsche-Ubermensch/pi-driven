@@ -28,7 +28,7 @@
     "setup": "node scripts/setup.mjs"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.0.0",
+    "@commitlint/cli": "^21.0.1",
     "@commitlint/config-conventional": "^19.0.0",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^3.0.0",
