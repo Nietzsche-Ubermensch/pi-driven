@@ -1,6 +1,8 @@
 {
   "defaultProvider": "opencode-go",
   "defaultModel": "deepseek-v4-pro",
+  "defaultThinkingLevel": "high",
+  "enableSkillCommands": true,
   "packages": [
     "npm:context-mode",
     "npm:pi-mcp-adapter",
@@ -13,7 +15,13 @@
     "npm:@juicesharp/rpiv-pi",
     "npm:@juicesharp/rpiv-todo",
     "npm:@juicesharp/rpiv-advisor",
-    "npm:@juicesharp/rpiv-ask-user-question"
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@fgladisch/pi-bash-approval"
   ],
-  "extensions": []
+  "extensions": [
+    "./.pi/extensions/enterprise.ts"
+  ],
+  "bashApproval": {
+    "splitChains": true
+  }
 }
