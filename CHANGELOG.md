@@ -16,6 +16,7 @@ Commits: [Conventional Commits](https://www.conventionalcommits.org/)
 - Integrate rpiv pipeline packages (juicesharp)
 - Enterprise deployment, monitoring, and advisor escalation
 - Enterprise pi extension with mode-aware security
+- Enterprise skills and prompt templates
 
 ### Fixed
 
