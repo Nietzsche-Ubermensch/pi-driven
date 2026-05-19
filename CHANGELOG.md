@@ -18,6 +18,7 @@ Commits: [Conventional Commits](https://www.conventionalcommits.org/)
 - Enterprise pi extension with mode-aware security
 - Enterprise skills and prompt templates
 - Enterprise CLI with 6 commands + skills + prompts
+- Enterprise monorepo architecture with Power Automate CI/CD
 
 ### Fixed
 
