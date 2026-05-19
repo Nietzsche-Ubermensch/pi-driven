@@ -7,7 +7,7 @@
   "author": "Nietzsche-Ubermensch",
   "type": "module",
   "scripts": {
-    "build": "turbo run build",
+    "build": "tsc -p packages/core/tsconfig.json --skipLibCheck && tsc -p packages/cli/tsconfig.json --skipLibCheck",
     "dev": "turbo run dev",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -52,8 +52,5 @@
   },
   "engines": {
     "node": ">=20.0.0"
-  },
-  "workspaces": [
-    "packages/*"
-  ]
+  }
 }
