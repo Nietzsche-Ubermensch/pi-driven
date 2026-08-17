@@ -23,4 +23,5 @@ Commits: [Conventional Commits](https://www.conventionalcommits.org/)
 ### Fixed
 
 - Resolve package conflicts, add coding-preferences config
+- Repair three broken GitHub Actions workflows
 
