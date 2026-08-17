@@ -44,8 +44,16 @@ jobs:
         run: |
           if [ -f "server/package.json" ]; then cd server; fi
           npm ci || npm install
-          npm test 2>/dev/null || echo "No test script found"
-          npx tsc --noEmit 2>/dev/null || true
+          if node -e "const p=require('./package.json'); process.exit(p.scripts&&p.scripts.test?0:1)" 2>/dev/null; then
+            npm test
+          else
+            echo "No test script found, skipping"
+          fi
+      - name: Node typecheck
+        if: steps.detect.outputs.type == 'node'
+        run: |
+          if [ -f "server/package.json" ]; then cd server; fi
+          npx tsc --noEmit || true
         continue-on-error: true
 
       - name: Setup Python
@@ -59,19 +67,16 @@ jobs:
         run: |
           pip install -e . 2>/dev/null || pip install -r requirements.txt 2>/dev/null || true
           pip install pytest 2>/dev/null || true
-          python -m pytest 2>/dev/null || echo "No tests found"
-        continue-on-error: true
+          python -m pytest; code=$?; [ $code -eq 0 ] || [ $code -eq 5 ] || exit $code
 
       - name: Go test
         if: steps.detect.outputs.type == 'go'
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-      - run: go test ./... 2>/dev/null || echo "No Go tests"
+      - run: go test ./...
         if: steps.detect.outputs.type == 'go'
-        continue-on-error: true
 
       - name: Rust test
         if: steps.detect.outputs.type == 'rust'
-        run: cargo test 2>/dev/null || echo "No Rust tests"
-        continue-on-error: true
+        run: cargo test

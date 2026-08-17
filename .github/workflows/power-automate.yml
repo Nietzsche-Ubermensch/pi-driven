@@ -33,7 +33,7 @@ jobs:
         run: |
           PACKAGES=""
           for pkg in core api cli pipeline security; do
-            if [ "${{ steps.changes.outputs[format('{0}', 'core')] }}" = "true" ]; then
+            if [ "${{ steps.changes.outputs[format('{0}', pkg)] }}" = "true" ]; then
               PACKAGES="${PACKAGES}${pkg},"
             fi
           done
