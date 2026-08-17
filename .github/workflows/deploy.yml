@@ -85,14 +85,20 @@ jobs:
       - name: Deploy to Pi cluster
         run: |
           echo "Deploying to ${{ inputs.environment }} environment"
+          # Requires secrets: PI_SSH_KEY, PI_CLUSTER_HOSTS
           # SSH into Pi cluster controller
           # for device in pi-cluster-{1..4}; do
           #   ssh pi@$device "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest && docker-compose up -d"
           # done
       - name: Health check
+        env:
+          PI_HEALTH_URL: ${{ secrets.PI_HEALTH_URL }}
         run: |
-          # curl --retry 5 --retry-delay 10 https://pi-cluster.local/health
-          echo "Health check passed"
+          if [ -z "$PI_HEALTH_URL" ]; then
+            echo "::warning::Secret PI_HEALTH_URL is not set — skipping live health probe. Set this secret to enable post-deploy health checks."
+          else
+            curl --fail --retry 5 --retry-delay 10 "$PI_HEALTH_URL"
+          fi
       - name: Notify Power Automate
         if: always()
         run: |
